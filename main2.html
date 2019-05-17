@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <title>webgl2 test</title>
+
+    <script type="text/javascript" src="./libs/utils.js"></script>
+    <script type="text/javascript" src="./libs/Program.js"></script>
+    <style>
+        canvas {
+            border: 5px dotted blue;
+        }
+    </style>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        #version 300 es
+        precision mediump float;
+        
+        // Supplied vertex position attribute  
+        layout(location = 5) in vec3 aVertexPosition;
+    
+        void main(void) {
+          // Set the position in clipspace coordinates
+          gl_Position = vec4(aVertexPosition, 1.0);
+        }
+    
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+
+        #version 300 es
+        precision mediump float;
+
+        out vec4 fragColor;
+
+        void main(void) {
+            fragColor = vec4(1.0,0.0,0.0,0.3);
+        }
+
+    </script>
+
+    <script type="text/javascript">
+
+        'use strict';
+
+        let gl, program, indices, squareVAO, squareIndexBuffer;
+
+        function initProgram() {
+
+            program = new Program(gl, 'vertex-shader', 'fragment-shader');
+
+            const attributes = ['aVertexPosition'];
+            const uniforms = [];
+            program.load(attributes, uniforms);
+
+        }
+
+        function initBuffers() {
+
+            const vertices = [
+                -0.5, 0.5, 0,
+                -0.5, -0.5, 0,
+                0.5, -0.5, 0,
+                0.5, 0.5, 0,
+                0, 0.8, 0
+            ];
+
+            indices = [0, 1, 2, 0, 2, 3];
+
+            squareVAO = gl.createVertexArray();
+            gl.bindVertexArray(squareVAO);
+            var squareVertexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+            gl.vertexAttribPointer(program.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(program.aVertexPosition);
+
+            // squareIndexBuffer = gl.createBuffer();
+            // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
+            // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+
+            gl.bindVertexArray(null);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        }
+
+        var w = 50;
+        var h = 50;
+        function draw() {
+
+
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            //指定多边形正面的方向。可以接受的值有GL_CW和GL_CCW。初始值为GL_CCW。
+            gl.frontFace(gl.CCW);
+            //指定应剔除多边形的哪一个面，不是GL_FRONT就是GL_BACK。 FRONT_AND_BACK
+            gl.cullFace(gl.BACK);
+            // gl.enable(gl.CULL_FACE);
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+
+            gl.bindVertexArray(squareVAO);
+            // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
+            // gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
+            gl.drawArrays(gl.TRIANGLES,0,5);
+
+            gl.bindVertexArray(null);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+            requestAnimationFrame(draw);
+        }
+
+        function init() {
+
+            const canvas = utils.getCanvas('webgl-canvas');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            gl = utils.getGLContext(canvas);
+
+            gl.clearColor(0, 0, 0, 1);
+
+            initProgram();
+            initBuffers();
+            draw();
+
+        }
+
+        window.onload = init;
+
+    </script>
+
+
+
+</head>
+
+<body>
+
+    <canvas id="webgl-canvas" width="800" height="600">
+        your browser does not support the HTML5 canvas element.
+    </canvas>
+
+</body>
+
+</html>

@@ -12,9 +12,9 @@ class Program {
 
         gl.attachShader(this.program, utils.getShader(gl, vertexShaderId));
         gl.attachShader(this.program, utils.getShader(gl, fragmentShaderId));
-        
+       
         gl.linkProgram(this.program);
-
+        
         console.log(this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS));
 
 
@@ -30,7 +30,7 @@ class Program {
     }
 
     load(attributes,uniforms) {
-        this.useProgram();
+        //this.useProgram();
         this.setAttributeLocations(attributes);
         this.setUniformLcations(uniforms);
     }

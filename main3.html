@@ -18,7 +18,7 @@
         precision mediump float;
         
         // Supplied vertex position attribute  
-        layout(location = 5) in vec3 aVertexPosition;
+        layout(location = 15) in vec3 aVertexPosition;
     
         void main(void) {
           // Set the position in clipspace coordinates
@@ -45,7 +45,7 @@
         precision mediump float;
         
         // Supplied vertex position attribute  
-        layout(location = 5) in vec3 aVertexPosition;
+        layout(location = 15) in vec3 aVertexPosition;
     
         void main(void) {
           // Set the position in clipspace coordinates
@@ -72,7 +72,7 @@
         'use strict';
 
         let gl, program, program2, indices, indices2, squareVAO, squareVertexBuffer, squareIndexBuffer, squareVertexBuffer2, squareIndexBuffer2;
-
+        let vao, vao2;
         function initProgram() {
 
             program = new Program(gl, 'vertex-shader', 'fragment-shader');
@@ -101,12 +101,19 @@
 
             indices = [0, 1, 2, 0, 2, 3];
 
+
             squareVertexBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
+            vao = gl.createVertexArray();
+            gl.bindVertexArray(vao);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
             gl.vertexAttribPointer(program.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(program.aVertexPosition);
+
+
 
             squareIndexBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
@@ -130,9 +137,13 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer2);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices2), gl.STATIC_DRAW);
 
-            gl.vertexAttribPointer(program2.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
-            // gl.enableVertexAttribArray(program2.aVertexPosition);
+            vao2 = gl.createVertexArray();
+            gl.bindVertexArray(vao2);
 
+            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer2);
+            gl.vertexAttribPointer(program2.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(program2.aVertexPosition);
+         
             squareIndexBuffer2 = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer2);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices2), gl.STATIC_DRAW);
@@ -152,12 +163,14 @@
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
             program.useProgram();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
+
+            gl.bindVertexArray(vao);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
 
             program2.useProgram();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer2);
+            gl.bindVertexArray(vao2);
             gl.drawElements(gl.TRIANGLES, indices2.length, gl.UNSIGNED_BYTE, 0);
+
             gl.bindVertexArray(null);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -176,10 +189,16 @@
 
             gl.clearColor(0, 0, 0, 1);
 
+            outputLog();
+
             initProgram();
             initBuffers();
             draw();
 
+        }
+
+        function outputLog() {
+            console.log(gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
         }
 
         window.onload = init;
