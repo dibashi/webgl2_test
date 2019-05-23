@@ -15,7 +15,7 @@ class Program {
        
         gl.linkProgram(this.program);
         
-        console.log(this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS));
+        // console.log(this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS));
 
 
         if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
