@@ -4,7 +4,8 @@
 <head>
 
     <title>webgl2 test</title>
-
+    <!-- <script type="text/javascript" src="./libs/m4.js"></script> -->
+    <script type="text/javascript" src="./libs/gl-matrix.js"></script>
     <script type="text/javascript" src="./libs/utils.js"></script>
     <script type="text/javascript" src="./libs/Program.js"></script>
     <style>
@@ -13,119 +14,139 @@
         }
     </style>
 
-    <script id="vertex-shader" type="x-shader/x-vertex">
+    <script id="vertexShader1" type="x-shader/x-vertex">
+
         #version 300 es
         precision mediump float;
-        
-        // Supplied vertex position attribute  
-        layout(location = 5) in vec3 aVertexPosition;
-    
-        void main(void) {
-          // Set the position in clipspace coordinates
-          gl_Position = vec4(aVertexPosition, 1.0);
+
+        in vec3 aVertexPosition;
+
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+
+        void main() {
+            gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition,1.0);
         }
-    
+
     </script>
 
-    <script id="fragment-shader" type="x-shader/x-fragment">
+    <script id="fragmentShader1" type="x-shader/x-fragment">
 
         #version 300 es
         precision mediump float;
+
+        uniform vec3 uModelColor;
 
         out vec4 fragColor;
 
-        void main(void) {
-            fragColor = vec4(1.0,0.0,0.0,0.3);
+        void main() {
+            fragColor = vec4(1.0,1.0,1.0,1.0);
         }
 
+        
     </script>
 
     <script type="text/javascript">
 
         'use strict';
+        var gl, program1, coneGeometry, coneVAO, projectionMatrix = mat4.create(),
+            modelViewMatrix = mat4.create();
 
-        let gl, program, indices, squareVAO, squareIndexBuffer;
-
+           
+        var parts = [];
         function initProgram() {
 
-            program = new Program(gl, 'vertex-shader', 'fragment-shader');
+            program1 = new Program(gl, "vertexShader1", "fragmentShader1");
 
-            const attributes = ['aVertexPosition'];
-            const uniforms = [];
-            program.load(attributes, uniforms);
+
+            var attributes = ["aVertexPosition"];
+            var uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uModelColor"];
+
+            program1.load(attributes, uniforms);
+            program1.useProgram();
+        }
+
+        function load() {
+
+            for (let i = 1; i < 179; i++) {
+                fetch(`./models/nissan-gtr/part${i}.json`).then(res => res.json()).then(
+
+                    data => {
+
+                        coneGeometry = data;
+
+                        coneVAO = gl.createVertexArray();
+
+                        gl.bindVertexArray(coneVAO);
+
+
+                        const coneVertices = gl.createBuffer();
+                        gl.bindBuffer(gl.ARRAY_BUFFER, coneVertices);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(coneGeometry.vertices), gl.STATIC_DRAW);
+
+                        gl.vertexAttribPointer(program1.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
+                        gl.enableVertexAttribArray(program1.aVertexPosition);
+
+                        const coneIndices = gl.createBuffer();
+                        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, coneIndices);
+                        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(coneGeometry.indices), gl.STATIC_DRAW);
+
+                        gl.bindVertexArray(null);
+                        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+                        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+                        var partData = {};
+                        partData.vao = coneVAO;
+                        partData.indicesLength = coneGeometry.indices.length;
+
+                        parts.push(partData);
+                    }
+
+                ).catch(console.error);
+            }
+
 
         }
 
-        function initBuffers() {
-
-            const vertices = [
-                -0.5, 0.5, 0,
-                -0.5, -0.5, 0,
-                0.5, -0.5, 0,
-                0.5, 0.5, 0,
-                0, 0.8, 0
-            ];
-
-            indices = [0, 1, 2, 0, 2, 3];
-
-            squareVAO = gl.createVertexArray();
-            gl.bindVertexArray(squareVAO);
-            var squareVertexBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-            gl.vertexAttribPointer(program.aVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(program.aVertexPosition);
-
-            // squareIndexBuffer = gl.createBuffer();
-            // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
-            // gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
-
-            gl.bindVertexArray(null);
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-        }
-
-        var w = 50;
-        var h = 50;
         function draw() {
 
-
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            //指定多边形正面的方向。可以接受的值有GL_CW和GL_CCW。初始值为GL_CCW。
-            gl.frontFace(gl.CCW);
-            //指定应剔除多边形的哪一个面，不是GL_FRONT就是GL_BACK。 FRONT_AND_BACK
-            gl.cullFace(gl.BACK);
-            // gl.enable(gl.CULL_FACE);
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
+            mat4.perspective(projectionMatrix, 45, gl.canvas.width / gl.canvas.height, 0.1, 10000);
+            mat4.identity(modelViewMatrix);
+            mat4.translate(modelViewMatrix, modelViewMatrix, [0, 0, -100.0]);
 
-            gl.bindVertexArray(squareVAO);
-            // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareIndexBuffer);
-            // gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
-            gl.drawArrays(gl.TRIANGLES,0,5);
+            gl.uniformMatrix4fv(program1.uProjectionMatrix, false, projectionMatrix);
+            gl.uniformMatrix4fv(program1.uModelViewMatrix, false, modelViewMatrix);
 
-            gl.bindVertexArray(null);
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            parts.forEach(partData => {
+                gl.bindVertexArray(partData.vao);
+                gl.drawElements(gl.TRIANGLES, partData.indicesLength, gl.UNSIGNED_SHORT, 0);
+                gl.bindVertexArray(null);
+            });
 
-            requestAnimationFrame(draw);
+        }
+
+        function render() {
+            draw();
+            requestAnimationFrame(render);
         }
 
         function init() {
 
-            const canvas = utils.getCanvas('webgl-canvas');
+            var canvas = utils.getCanvas("webgl-canvas");
 
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            utils.autoResizeCanvas(canvas);
 
             gl = utils.getGLContext(canvas);
 
             gl.clearColor(0, 0, 0, 1);
+            gl.enable(gl.DEPTH_TEST);
 
             initProgram();
-            initBuffers();
-            draw();
+            load();
+
+            render();
 
         }
 
