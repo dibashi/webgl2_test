@@ -75,6 +75,14 @@ const utils = {
 
     },
 
+    normalizeColor(color) {
+        return color.map(c => c / 255);
+    },
+
+    denormalizeColor(color) {
+        return color.map(c => c * 255);
+    },
+
     // Returns computed normals for provided vertices.
     // Note: Indices have to be completely defined--NO TRIANGLE_STRIP only TRIANGLES.
     calculateNormals(vs, ind) {
