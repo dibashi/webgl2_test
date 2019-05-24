@@ -47,9 +47,9 @@ const utils = {
             return null;
         }
 
-        console.log(script.text);
+        // console.log(script.text);
         const shaderString = script.text.trim();
-        console.log(shaderString);
+        // console.log(shaderString);
 
 
         let shader;
